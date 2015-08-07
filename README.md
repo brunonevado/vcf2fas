@@ -7,7 +7,7 @@ vcf2fas -reference reference.fas -vcfs samples.txt
     -reference: reference genome/transcriptome used.  
     -vcfs: text file with path to vcf file(s) to use.  
   
-Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder.  
+Output: 1 fasta file per contig named 'contig_name.fas' to current folder.  
   
 Requirements:  
     BIO++ (bpp-core and bpp-seq libraries)  
