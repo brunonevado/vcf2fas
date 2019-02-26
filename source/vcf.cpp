@@ -13,7 +13,7 @@ vcf::vcf ( std::string in ){
     failed_parse = 0;
 }
 
-void vcf::readfile () {
+void vcf::readfile ( std::string gfField) {
     std::ifstream fh_infile;
     std::string cline;
     
@@ -60,7 +60,9 @@ void vcf::readfile () {
                 }
                 // SNP call
                 else{
-                    std::string genotype = get_genotype(fields);
+                    
+                    std::string genotype = (gfField == "PL") ? get_genotype_PL(fields) : get_genotype_GT(fields);
+                    
                     aline.start = std::stoi(fields.at(1));
                     aline.end = std::stoi( fields.at(1)  );
                     aline.alt = toIUPAC(genotype);
@@ -90,7 +92,7 @@ void vcf::readfile () {
 }
 
 
-std::string vcf::get_genotype ( const std::vector <std::string > & fields){
+std::string vcf::get_genotype_PL ( const std::vector <std::string > & fields){
 
     // alternative alleles
     std::vector <std::string> alt_alleles = msplit( fields.at(4), "," );
@@ -117,7 +119,7 @@ std::string vcf::get_genotype ( const std::vector <std::string > & fields){
             num_zeros++;
         }
     }
-    if( num_zeros != 1 ){ throw "WARNING: more than 1 PL field is"; }
+    if( num_zeros != 1 ){ throw "WARNING: more than 1 PL field is 0"; }
     
     else{
         // min_pl_field, alt_alleles
@@ -200,6 +202,38 @@ std::string vcf::get_genotype ( const std::vector <std::string > & fields){
         }
     }
 }
+
+
+std::string vcf::get_genotype_GT ( const std::vector <std::string > & fields){
+    
+    // alternative alleles
+    std::vector <std::string> alt_alleles = msplit( fields.at(4), "," );
+    std::vector <std::string> all_alleles;
+    all_alleles.push_back(fields.at(3));
+    for(auto i:alt_alleles){
+        all_alleles.push_back(i);
+    }
+    
+    // check where GT is stored
+    unsigned int gt_field=0;
+    bool found_gt = false;
+    std::vector <std::string> keys = msplit( fields.at(8), ":" );
+    for(gt_field=0; gt_field < keys.size(); gt_field++){
+        if( strncmp(keys.at(gt_field).c_str(), "GT", 2) == 0 ){
+            found_gt = true;
+            break;
+        }
+    }
+    
+    if(!found_gt){ throw std::string("Cannot find GT field"); }
+    
+    std::vector <std::string> values = msplit( fields.at(9), ":" );
+    std::vector <std::string> gt_values = msplit( values.at(gt_field), "/" );  // this will not work for phased vcfs
+    if(gt_values.size() != 2){ throw std::string("GT field does not have 2 values separated by /"); }
+    std::string geno = all_alleles.at(std::stoi(gt_values.at(0))) + all_alleles.at(std::stoi(gt_values.at(1)));
+    return geno;
+}
+
 
 
 char vcf::toIUPAC (const std::string instr){

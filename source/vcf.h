@@ -40,10 +40,11 @@ private:
     std::string infile;
     std::string ind_name;
     std::map < std::string, vcf_region > contigs;
-    static std::string get_genotype( const std::vector <std::string > & fields);
+    static std::string get_genotype_PL( const std::vector <std::string > & fields);
+    static std::string get_genotype_GT( const std::vector <std::string > & fields);
 public:
     vcf ( std::string infile );
-    void readfile();
+    void readfile(std::string gfField);
     std::string get_infile () { return infile; };
     std::string get_ind_name () { return ind_name; };
     static char toIUPAC (const std::string instr);

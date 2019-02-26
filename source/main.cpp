@@ -21,16 +21,17 @@
 #include "vcf.h"
 
 // 14072015: throwing error without catch fixed
-// 24042015 : trying to fix linux-only bug
-
+// 24042015: trying to fix linux-only bug
+// 2602019: added option to use genotype calls directly from GT field or from PL values
 
 void help(){
-    std::cout << "###################\n  vcf2fas 17072015 \n###################" << std::endl;;
+    std::cout << "###################\n  vcf2fas 26022019 \n###################" << std::endl;;
     std::cout << "Create fasta files from vcf files." << std::endl;;
     std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt" << std::endl;
     std::cout << "-reference: reference genome/transcriptome used." << std::endl;
     std::cout << "-vcfs: text file with path to vcf files to use." << std::endl;
-    std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
+    std::cout << "-gf: which field to use for genotypes: GT or PL." << std::endl;
+   std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
     
     std::cout << "Requirements: BIO++" << std::endl;
     std::cout << "              VCF files must be obtained with SAMtools v1.0+, and filtered with bcftools (should contain 'PASS' for confident variants)." << std::endl;
@@ -48,7 +49,7 @@ int main(int argc, const char * argv[]) {
     
     sargs myargs;
     try{
-        myargs = args::getargs(argc, argv, std::vector<std::string> {"reference","vcfs"}, std::vector<std::string> {}, std::vector<std::string>  {}, std::string {"contigs"}, std::string {}); }
+        myargs = args::getargs(argc, argv, std::vector<std::string> {"reference","vcfs","gf"}, std::vector<std::string> {}, std::vector<std::string>  {}, std::string {"contigs"}, std::string {}); }
     catch (std::string e){
         std::cout << " Args failed: " << e << std::endl;
         help();
@@ -57,8 +58,13 @@ int main(int argc, const char * argv[]) {
     
     std::string reference = myargs.args_string.at(0);
     std::string infilesVCF = myargs.args_string.at(1);
+    std::string genotypeField = myargs.args_string.at(2);
     std::string infileCONTIGS = (myargs.args_string_optional.size() > 0) ? myargs.args_string_optional.at(0) : "";
     
+    if( genotypeField != "GT" && genotypeField != "PL" ){
+        std::cerr << "ERROR: Genotype field (-gf) must be GT or PL" << std::endl;
+        exit(1);
+    }
     
     // READ VCFS
     std::vector < vcf > vec_vcfs;
@@ -72,7 +78,7 @@ int main(int argc, const char * argv[]) {
         vcf avcf(cfile);
         
         try {
-            avcf.readfile();
+            avcf.readfile(genotypeField);
         }
         catch(std::string e){
             std::cerr << "ERROR READING VCF FILE " << cfile << " : " <<  e << std::endl;
