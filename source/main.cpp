@@ -11,9 +11,12 @@
 
 #include <iostream>
 
-#include <Bpp/Seq/Alphabet.all> /* this includes all alphabets in one shot */
-#include <Bpp/Seq/Container.all> /* this includes all containers */
-#include <Bpp/Seq/Io.all> /* this includes all sequence readers and writers */
+// #include <Bpp/Seq/Alphabet.all> /* this includes all alphabets in one shot */
+// #include <Bpp/Seq/Container.all> /* this includes all containers */
+// #include <Bpp/Seq/Io.all> /* this includes all sequence readers and writers */
+#include <Bpp/Seq/Container/VectorSiteContainer.h>
+#include <Bpp/Seq/Alphabet/AlphabetTools.h>
+#include <Bpp/Seq/Io/Fasta.h>
 #include <Bpp/App/ApplicationTools.h>
 #include <Bpp/Seq/SiteTools.h>
 
@@ -23,9 +26,10 @@
 // 14072015: throwing error without catch fixed
 // 24042015: trying to fix linux-only bug
 // 2602019: added option to use genotype calls directly from GT field or from PL values
+// 21052021: changed vcf.cpp to detect indels based on regex
 
 void help(){
-    std::cout << "###################\n  vcf2fas 26022019 \n###################" << std::endl;;
+    std::cout << "###################\n  vcf2fas 21052021 \n###################" << std::endl;;
     std::cout << "Create fasta files from vcf files." << std::endl;;
     std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt" << std::endl;
     std::cout << "-reference: reference genome/transcriptome used." << std::endl;
