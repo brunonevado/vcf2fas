@@ -36,7 +36,8 @@ void vcf::readfile ( std::string gfField) {
             std::vector <std::string > fields = msplit(cline, "\t");
             vcf_line aline;
             try{
-                if ( fields.at(6) != "PASS" || fields.at(7).substr(0,5) == "INDEL" ) { continue; }
+               // if ( fields.at(6) != "PASS" || fields.at(7).substr(0,5) == "INDEL" ) { continue; }
+                if ( fields.at(6) != "PASS" || regex_match (fields.at(7), std::regex(".*INDEL.*") ))  { std::clog << "skipping" << cline << std::endl; continue; }
                 // homozygous ref call
                 else if ( fields.at(7).substr(0,3) == "END" ){
                     aline.start = std::stoi(fields.at(1));

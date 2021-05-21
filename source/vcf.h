@@ -16,7 +16,7 @@
 #include <fstream>
 #include <cstring> // for strncmp
 #include <algorithm>
-
+#include <regex>
 #include "common.h"
 
 
