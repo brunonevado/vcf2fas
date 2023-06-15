@@ -8,9 +8,10 @@
 #include "vcf.h"
 
 
-vcf::vcf ( std::string in ){
+vcf::vcf ( std::string in, bool iupacStrictness ){
     infile = in;
     failed_parse = 0;
+    iupacStrict = iupacStrictness;
 }
 
 void vcf::readfile ( std::string gfField) {
@@ -59,6 +60,28 @@ void vcf::readfile ( std::string gfField) {
                     
                     continue;
                 }
+                // 1bp homozygous ref blocks
+                else if ( fields.at(7).substr(0,5) == "MinDP" ){
+                    aline.start = std::stoi(fields.at(1));
+                    aline.end = std::stoi( fields.at(1)  );
+                    aline.ref = true;
+               
+               
+                    if( contigs.count(fields.at(0)) == 0  ){
+                        vcf_region new_region;
+                        new_region.contig = fields.at(0);
+                        new_region.lines.push_back(aline);
+                        contigs.insert( std::pair <std::string, vcf_region> (fields.at(0), new_region));
+               
+                    }
+                    else{
+                        contigs.at(fields.at(0)).lines.push_back(aline);
+                    }
+               
+               
+               
+                    continue;
+                }
                 // SNP call
                 else{
                     
@@ -66,7 +89,19 @@ void vcf::readfile ( std::string gfField) {
                     
                     aline.start = std::stoi(fields.at(1));
                     aline.end = std::stoi( fields.at(1)  );
-                    aline.alt = toIUPAC(genotype);
+                    try{
+                     aline.alt = toIUPAC(genotype);
+                     }
+                     catch(...){
+                         if(iupacStrict){
+                             std::cerr << "ERROR (toIUPAC) in file " << infile << " on  vcf line: " << cline << std::endl;
+                             exit(1);
+                             
+                         }else{
+                             std::cerr << "WARNING (toIUPAC failed - masked with N) in file " << infile << " on  vcf line: " << cline << std::endl;
+                             aline.alt = 'N';
+                         }
+                     }
                     aline.ref = false;
                     if( contigs.count(fields.at(0)) == 0  ){
                         vcf_region new_region;
@@ -262,8 +297,7 @@ char vcf::toIUPAC (const std::string instr){
         return 'y';
     }
     else{
-        std::cerr << "ERROR (turnIUPAC): no code available for " << in.at(0) << in.at(1) << "\n";
-        exit(1);
+        throw("");
     }
 }
 

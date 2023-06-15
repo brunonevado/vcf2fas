@@ -42,8 +42,9 @@ private:
     std::map < std::string, vcf_region > contigs;
     static std::string get_genotype_PL( const std::vector <std::string > & fields);
     static std::string get_genotype_GT( const std::vector <std::string > & fields);
+    bool iupacStrict;
 public:
-    vcf ( std::string infile );
+    vcf ( std::string infile, bool iupacStrictness );
     void readfile(std::string gfField);
     std::string get_infile () { return infile; };
     std::string get_ind_name () { return ind_name; };

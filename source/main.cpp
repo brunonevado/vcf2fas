@@ -27,17 +27,20 @@
 // 24042015: trying to fix linux-only bug
 // 2602019: added option to use genotype calls directly from GT field or from PL values
 // 21052021: changed vcf.cpp to detect indels based on regex
+// 21052021b: added strictIUPAC option - to ignore (with warning) errors turning alleles to iupac codes
+// 150623: added ability to read 1-bp homozygous blocks with MinDP instead of END flag
 
 void help(){
-    std::cout << "###################\n  vcf2fas 21052021 \n###################" << std::endl;;
+    std::cout << "###################\n  vcf2fas 150623 \n###################" << std::endl;;
     std::cout << "Create fasta files from vcf files." << std::endl;;
     std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt" << std::endl;
     std::cout << "-reference: reference genome/transcriptome used." << std::endl;
     std::cout << "-vcfs: text file with path to vcf files to use." << std::endl;
     std::cout << "-gf: which field to use for genotypes: GT or PL." << std::endl;
-   std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
+    std::cout << "-strictIUPAC: if set to 0, errors in assigning IUPAC codes will not crash program (maybe useful for debugging?)." << std::endl;
+    std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
     
-    std::cout << "Requirements: BIO++" << std::endl;
+    std::cout << "Requirements: BIO++ (bio-core and bio-seq v 2.4.0)" << std::endl;
     std::cout << "              VCF files must be obtained with SAMtools v1.0+, and filtered with bcftools (should contain 'PASS' for confident variants)." << std::endl;
     std::cout << "              Reference homozygous calls can be present." << std::endl;
     std::cout << "Notes: INDELS are ignored." << std::endl;
@@ -53,7 +56,7 @@ int main(int argc, const char * argv[]) {
     
     sargs myargs;
     try{
-        myargs = args::getargs(argc, argv, std::vector<std::string> {"reference","vcfs","gf"}, std::vector<std::string> {}, std::vector<std::string>  {}, std::string {"contigs"}, std::string {}); }
+        myargs = args::getargs(argc, argv, std::vector<std::string> {"reference","vcfs","gf"}, std::vector<std::string> {"strictIUPAC"}, std::vector<std::string>  {}, std::string {"contigs"}, std::string {}); }
     catch (std::string e){
         std::cout << " Args failed: " << e << std::endl;
         help();
@@ -64,7 +67,8 @@ int main(int argc, const char * argv[]) {
     std::string infilesVCF = myargs.args_string.at(1);
     std::string genotypeField = myargs.args_string.at(2);
     std::string infileCONTIGS = (myargs.args_string_optional.size() > 0) ? myargs.args_string_optional.at(0) : "";
-    
+    bool strictIUPAC = myargs.args_booleans.at(0);
+
     if( genotypeField != "GT" && genotypeField != "PL" ){
         std::cerr << "ERROR: Genotype field (-gf) must be GT or PL" << std::endl;
         exit(1);
@@ -79,8 +83,8 @@ int main(int argc, const char * argv[]) {
     }
     std::string cfile;
     while (getline(fh_vcfs, cfile)) {
-        vcf avcf(cfile);
-        
+        vcf avcf(cfile, strictIUPAC);
+
         try {
             avcf.readfile(genotypeField);
         }

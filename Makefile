@@ -3,7 +3,7 @@ PROGRAM=vcf2fas
 
 
 CC=g++
-LIBS=-lbpp-core -lbpp-seq -lbpp-phyl
+LIBS=-lbpp-core -lbpp-seq
 
 
 CFLAGS=-Wall -O3 -std=c++11
