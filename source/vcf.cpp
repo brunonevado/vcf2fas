@@ -276,7 +276,7 @@ char vcf::toIUPAC (const std::string instr){
     std::string in = instr;
     std::transform(in.begin(), in.end(), in.begin(), ::tolower);
     if( in.at(0) == in.at(1) ){
-        return in.at(0);
+        return std::transform( in.at(0), ::toupper);
     }
     else if ( (in.at(0) == 'a' && in.at(1) == 'c') || (in.at(1) == 'a' && in.at(0) == 'c') ){
         return 'M';
