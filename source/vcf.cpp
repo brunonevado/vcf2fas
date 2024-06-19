@@ -279,22 +279,22 @@ char vcf::toIUPAC (const std::string instr){
         return in.at(0);
     }
     else if ( (in.at(0) == 'a' && in.at(1) == 'c') || (in.at(1) == 'a' && in.at(0) == 'c') ){
-        return 'm';
+        return 'M';
     }
     else if ( (in.at(0) == 'a' && in.at(1) == 'g') || (in.at(1) == 'a' && in.at(0) == 'g') ){
-        return 'r';
+        return 'R';
     }
     else if ( (in.at(0) == 'a' && in.at(1) == 't') || (in.at(1) == 'a' && in.at(0) == 't') ){
-        return 'w';
+        return 'W';
     }
     else if ( (in.at(0) == 'c' && in.at(1) == 'g') || (in.at(1) == 'c' && in.at(0) == 'g') ){
-        return 's';
+        return 'S';
     }
     else if ( (in.at(0) == 't' && in.at(1) == 'g') || (in.at(1) == 't' && in.at(0) == 'g') ){
-        return 'k';
+        return 'K';
     }
     else if ( (in.at(0) == 'c' && in.at(1) == 't') || (in.at(1) == 'c' && in.at(0) == 't') ){
-        return 'y';
+        return 'Y';
     }
     else{
         throw("");
