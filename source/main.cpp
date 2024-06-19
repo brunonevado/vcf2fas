@@ -4,24 +4,15 @@
  Needs reference sequence (-reference) and a text file with path to vcf files to use (-infiles).
  Optionally can take a list of contigs to use (-contigs) – default is all contigs. Option not implemented yet.
  Output files (1 per contig) will be named contig_name.fas.
- 
- Uses BIO++
- 
+
  */
 
 #include <iostream>
 
-// #include <Bpp/Seq/Alphabet.all> /* this includes all alphabets in one shot */
-// #include <Bpp/Seq/Container.all> /* this includes all containers */
-// #include <Bpp/Seq/Io.all> /* this includes all sequence readers and writers */
-#include <Bpp/Seq/Container/VectorSiteContainer.h>
-#include <Bpp/Seq/Alphabet/AlphabetTools.h>
-#include <Bpp/Seq/Io/Fasta.h>
-#include <Bpp/App/ApplicationTools.h>
-#include <Bpp/Seq/SiteTools.h>
 
-#include "args.h"
+#include "args2.h"
 #include "vcf.h"
+# include "fasta.h"
 
 // 14072015: throwing error without catch fixed
 // 24042015: trying to fix linux-only bug
@@ -30,14 +21,19 @@
 // 21052021b: added strictIUPAC option - to ignore (with warning) errors turning alleles to iupac codes
 // 150623: added ability to read 1-bp homozygous blocks with MinDP instead of END flag
 
+
+// need to do: check when ref allele has length > 1!
+
+std::string Pversion = "v2.XXXXXXX";
+
 void help(){
-    std::cout << "###################\n  vcf2fas 150623 \n###################" << std::endl;;
+    std::cout << "###################\n  vcf2fas "<< Pversion << "\n###################" << std::endl;;
     std::cout << "Create fasta files from vcf files." << std::endl;;
     std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt" << std::endl;
     std::cout << "-reference: reference genome/transcriptome used." << std::endl;
     std::cout << "-vcfs: text file with path to vcf files to use." << std::endl;
     std::cout << "-gf: which field to use for genotypes: GT or PL." << std::endl;
-    std::cout << "-strictIUPAC: if set to 0, errors in assigning IUPAC codes will not crash program (maybe useful for debugging?)." << std::endl;
+    std::cout << "-strictIUPAC: if set to 0, errors in assigning IUPAC codes will not crash program (maybe useful for debugging? - default is true)." << std::endl;
     std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
     
     std::cout << "Requirements: BIO++ (bio-core and bio-seq v 2.4.0)" << std::endl;
@@ -51,29 +47,51 @@ void help(){
 
 
 int main(int argc, const char * argv[]) {
-    
-    bool outputFasta = true;
-    
-    sargs myargs;
+     
+    // read command line options
+    margs programOptions;
     try{
-        myargs = args::getargs(argc, argv, std::vector<std::string> {"reference","vcfs","gf"}, std::vector<std::string> {"strictIUPAC"}, std::vector<std::string>  {}, std::string {"contigs"}, std::string {}); }
-    catch (std::string e){
-        std::cout << " Args failed: " << e << std::endl;
-        help();
-        exit(1);
-    }
-    
-    std::string reference = myargs.args_string.at(0);
-    std::string infilesVCF = myargs.args_string.at(1);
-    std::string genotypeField = myargs.args_string.at(2);
-    std::string infileCONTIGS = (myargs.args_string_optional.size() > 0) ? myargs.args_string_optional.at(0) : "";
-    bool strictIUPAC = myargs.args_booleans.at(0);
+        programOptions.getargs(argc, argv, std::vector <std::string> {
+            "reference,s,f",
+            "vcfs,s,f",
+            "gf,s,t",
+            "strictIUPAC,b,t",
+            "contigs,s,t",
+            "verbose,b,t"
+            });
+    }catch(std::string e){ help();std::cerr << std::endl << "Failed reading args: " << e << std::endl;exit(1);}
+
+    std::string reference =programOptions.getString("reference");
+    std::string infilesVCF =programOptions.getString("vcfs");
+    std::string genotypeField = programOptions.isArgDefined("gf") ? programOptions.getString("gf") : "GT";
+    std::string infileContigs = programOptions.isArgDefined("contigs") ? programOptions.getString("contigs") : "";
+    bool strictIUPAC = programOptions.isArgDefined("strictIUPAC") ? programOptions.getBool("strictIUPAC") : true;
+    bool verbose = programOptions.isArgDefined("verbose") ? programOptions.getBool("verbose") : false;
 
     if( genotypeField != "GT" && genotypeField != "PL" ){
         std::cerr << "ERROR: Genotype field (-gf) must be GT or PL" << std::endl;
         exit(1);
     }
-    
+
+    // READ CONTIG NAMES (IF DEFINED)
+    std::vector < std::string > contigNames;
+    if(infileContigs != ""){
+        std::ifstream fh_contigs ( infileContigs );
+        if( !fh_contigs.is_open() ){
+            std::cerr << "ERROR: Unable to open for reading contigs infile " << infileContigs << std::endl;
+            exit(1);
+        }
+        std::string cfile;
+        while (getline(fh_contigs, cfile)) {
+            if(cfile.length() > 0){
+                contigNames.push_back(cfile);
+            }
+        }
+        if(verbose){
+            std::cout << "Read " << contigNames.size() << " contig names from file " << infileContigs << std::endl; 
+        }
+    }
+
     // READ VCFS
     std::vector < vcf > vec_vcfs;
     std::ifstream fh_vcfs ( infilesVCF );
@@ -97,62 +115,22 @@ int main(int argc, const char * argv[]) {
     }
     
     // READ REF
-    bpp::Fasta fasReader(-1);
-    fasReader.strictNames(true);
-    bpp::OrderedSequenceContainer *reference_genome = fasReader.readSequences(reference, &bpp::AlphabetTools::DNA_ALPHABET);
-    std::clog << "Read " << reference_genome->getNumberOfSequences() << " contigs form reference file " << reference << std::endl;
-    
-    if( infileCONTIGS == "" ){
-        for ( unsigned int icontig = 0 ; icontig < reference_genome->getNumberOfSequences() ; icontig++ ) {
-            bpp::AlignedSequenceContainer bpp_contig ( &bpp::AlphabetTools::DNA_ALPHABET );
-            
-            try{
-                for (unsigned int iind = 0; iind < vec_vcfs.size(); iind++) {
-                    std::string temp = vec_vcfs.at(iind).make_fas(reference_genome->getSequencesNames().at(icontig), reference_genome->getSequence(icontig).toString());
-                    bpp::Sequence *sequence = new bpp::BasicSequence( vec_vcfs.at(iind).get_ind_name() , temp, &bpp::AlphabetTools::DNA_ALPHABET);
-                    bpp_contig.addSequence(*sequence);
-                    delete  sequence;
-                }
+    fasta genomeReferenceFasta(Pversion);
+    try{
+        genomeReferenceFasta.readFastaFile(reference, verbose);
+        for ( unsigned int icontig = 0 ; icontig < genomeReferenceFasta.getNumberOfSequences() ; icontig++ ) {
+            fasta currentContig(Pversion);
+            for (unsigned int iind = 0; iind < vec_vcfs.size(); iind++) {
+                currentContig.addSequence(vec_vcfs.at(iind).get_ind_name(), vec_vcfs.at(iind).make_fas(genomeReferenceFasta.getSequenceName(icontig), genomeReferenceFasta.getSequence(icontig)), (iind == 0) ? false : true, verbose );
             }
-            catch(...){
-                std::cerr << "ERROR: problems doing contig " << reference_genome->getSequencesNames().at(icontig) << std::endl;
-                exit(1);
-            }
-            
-            if( outputFasta == true ){
-                try{
-                    fasReader.writeSequences(std::string( reference_genome->getSequencesNames().at(icontig) + ".fas"  ), bpp_contig );
-                }
-                catch(...){
-                    std::cerr << "ERROR: problems writing to file contig " << reference_genome->getSequencesNames().at(icontig) << std::endl;
-                    exit(1);
-                }
-            }
-            else{
-                
-                bpp::SiteContainer *vsc2 = new bpp::VectorSiteContainer(bpp_contig);
-                
-                for( unsigned int isite = 0; isite < vsc2->getNumberOfSites() ; isite++ ){
-                    
-                    if (bpp::SiteTools::getNumberOfDistinctCharacters(vsc2->getSite(isite)) <=2){continue;}
-                    
-                    std::cout << reference_genome->getSequencesNames().at(icontig) << "\t" << vsc2->getSite(isite).getPosition() << "\t"
-                    << vsc2->getSite(isite).toString() << "\t" << bpp::SiteTools::getNumberOfDistinctCharacters(vsc2->getSite(isite))
-                    
-                    << std::endl;
-                }
-            }
-            
-            if( icontig % 100 == 0 ){
-                bpp::ApplicationTools::displayGauge(icontig/100, (reference_genome->getNumberOfSequences()/100)-1, '.' );
-            }
+            currentContig.writeFastaFile( std::string( genomeReferenceFasta.getSequenceName(icontig) + ".fas" ), verbose );
         }
     }
-    else{
-        std::cerr << "Contigs option not available yet!" << std::endl;
+    catch(std::string e){
+        std::cerr << "ERROR: problems writing fasta file: " << e << std::endl;
         exit(1);
     }
-    
+
     std::clog << std::endl << "Finished writing fasta files." << std::endl;
     return 0;
 }
