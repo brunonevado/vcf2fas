@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source -O3 -DNDEBUG -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -o CMakeFiles/vcf2fas.dir/source/common.cpp.o -c /Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/common.cpp",
+  "file": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/common.cpp",
+  "output": "CMakeFiles/vcf2fas.dir/source/common.cpp.o"
+},
+{
+  "directory": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source -O3 -DNDEBUG -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -o CMakeFiles/vcf2fas.dir/source/fasta.cpp.o -c /Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/fasta.cpp",
+  "file": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/fasta.cpp",
+  "output": "CMakeFiles/vcf2fas.dir/source/fasta.cpp.o"
+},
+{
+  "directory": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source -O3 -DNDEBUG -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -o CMakeFiles/vcf2fas.dir/source/main.cpp.o -c /Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/main.cpp",
+  "file": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/main.cpp",
+  "output": "CMakeFiles/vcf2fas.dir/source/main.cpp.o"
+},
+{
+  "directory": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source -O3 -DNDEBUG -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.7 -o CMakeFiles/vcf2fas.dir/source/vcf.cpp.o -c /Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/vcf.cpp",
+  "file": "/Users/bruno/Documents/BACKUPABLE/CPP/VSC/vcf2fas/source/vcf.cpp",
+  "output": "CMakeFiles/vcf2fas.dir/source/vcf.cpp.o"
+}
+]

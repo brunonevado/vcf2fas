@@ -35,10 +35,12 @@ void vcf::readfile ( std::string gfField) {
         }
         else{
             std::vector <std::string > fields = msplit(cline, "\t");
+            if( contigs_to_consider.size() != 0 && contigs_to_consider.count(fields.at(0)) == 0 ){continue;}
             vcf_line aline;
             try{
                // if ( fields.at(6) != "PASS" || fields.at(7).substr(0,5) == "INDEL" ) { continue; }
                 if ( fields.at(6) != "PASS" || regex_match (fields.at(7), std::regex(".*INDEL.*") ))  { continue; }
+                
                 // homozygous ref call
                 else if ( fields.at(7).substr(0,3) == "END" ){
                     aline.start = std::stoi(fields.at(1));
@@ -84,9 +86,12 @@ void vcf::readfile ( std::string gfField) {
                 }
                 // SNP call
                 else{
-                    
+                    // some files have REF alleles with > 1 base, but not marked INDELS
+                    if(fields.at(3).length() > 1 ){
+                        std::cerr << "WARNING: reference allele in vcf line has length > 1 and was ignored: " << cline << std::endl;
+                        continue;
+                    }
                     std::string genotype = (gfField == "PL") ? get_genotype_PL(fields) : get_genotype_GT(fields);
-                    
                     aline.start = std::stoi(fields.at(1));
                     aline.end = std::stoi( fields.at(1)  );
                     try{
@@ -276,7 +281,7 @@ char vcf::toIUPAC (const std::string instr){
     std::string in = instr;
     std::transform(in.begin(), in.end(), in.begin(), ::tolower);
     if( in.at(0) == in.at(1) ){
-        return std::transform( in.at(0), ::toupper);
+        return instr.at(0);
     }
     else if ( (in.at(0) == 'a' && in.at(1) == 'c') || (in.at(1) == 'a' && in.at(0) == 'c') ){
         return 'M';

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Darwin-c++"
+	BuildStamp="20240620-1247-Experimental"
+	Name="Brunos-MBP.fc.ul.pt"
+	Generator="ctest-3.26.4"
+	CompilerName="/Library/Developer/CommandLineTools/usr/bin/c++"
+	CompilerVersion="13.0.0.13000029"
+	OSName="macOS"
+	Hostname="Brunos-MBP.fc.ul.pt"
+	OSRelease="11.7.8"
+	OSVersion="20G1351"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="61"
+	ProcessorCacheSize="32768"
+	NumberOfLogicalCPU="4"
+	NumberOfPhysicalCPU="2"
+	TotalVirtualMemory="3072"
+	TotalPhysicalMemory="8192"
+	LogicalProcessorsPerPhysical="8"
+	ProcessorClockFrequency="2700"
+	>
+	<Testing>
+		<StartDateTime>Jun 20 13:59 WEST</StartDateTime>
+		<StartTestTime>1718888358</StartTestTime>
+		<TestList/>
+		<EndDateTime>Jun 20 13:59 WEST</EndDateTime>
+		<EndTestTime>1718888358</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

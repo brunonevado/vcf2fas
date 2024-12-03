@@ -1,14 +1,13 @@
 /*
  Convert VCF output from SAMtools v1+ into fasta
  Input VCFs should contain a single individual, and be filtered (PASS field must be present)
- Needs reference sequence (-reference) and a text file with path to vcf files to use (-infiles).
- Optionally can take a list of contigs to use (-contigs) – default is all contigs. Option not implemented yet.
+ Needs reference sequence (-reference) and a text file with path to vcf files to use (-vcfs).
  Output files (1 per contig) will be named contig_name.fas.
 
  */
 
 #include <iostream>
-
+#include <unordered_map>
 
 #include "args2.h"
 #include "vcf.h"
@@ -20,11 +19,10 @@
 // 21052021: changed vcf.cpp to detect indels based on regex
 // 21052021b: added strictIUPAC option - to ignore (with warning) errors turning alleles to iupac codes
 // 150623: added ability to read 1-bp homozygous blocks with MinDP instead of END flag
+// 260624: added contig option
 
 
-// need to do: check when ref allele has length > 1!
-
-std::string Pversion = "v2.XXXXXXX";
+std::string Pversion = "v2.260624";
 
 void help(){
     std::cout << "###################\n  vcf2fas "<< Pversion << "\n###################" << std::endl;;
@@ -36,8 +34,7 @@ void help(){
     std::cout << "-strictIUPAC: if set to 0, errors in assigning IUPAC codes will not crash program (maybe useful for debugging? - default is true)." << std::endl;
     std::cout << "Ouput: 1 fasta file per contig named 'contig_name.fas' to current folder." << std::endl;
     
-    std::cout << "Requirements: BIO++ (bio-core and bio-seq v 2.4.0)" << std::endl;
-    std::cout << "              VCF files must be obtained with SAMtools v1.0+, and filtered with bcftools (should contain 'PASS' for confident variants)." << std::endl;
+    std::cout << "Requirements: VCF files must be obtained with SAMtools v1.0+, and filtered with bcftools (should contain 'PASS' for confident variants)." << std::endl;
     std::cout << "              Reference homozygous calls can be present." << std::endl;
     std::cout << "Notes: INDELS are ignored." << std::endl;
     std::cout << "       Heterozygous genotypes are coded with IUPAC." << std::endl;
@@ -74,7 +71,7 @@ int main(int argc, const char * argv[]) {
     }
 
     // READ CONTIG NAMES (IF DEFINED)
-    std::vector < std::string > contigNames;
+    std::unordered_map < std::string, bool > contigNames;
     if(infileContigs != ""){
         std::ifstream fh_contigs ( infileContigs );
         if( !fh_contigs.is_open() ){
@@ -84,7 +81,7 @@ int main(int argc, const char * argv[]) {
         std::string cfile;
         while (getline(fh_contigs, cfile)) {
             if(cfile.length() > 0){
-                contigNames.push_back(cfile);
+                contigNames[cfile] = true;
             }
         }
         if(verbose){
@@ -102,6 +99,7 @@ int main(int argc, const char * argv[]) {
     std::string cfile;
     while (getline(fh_vcfs, cfile)) {
         vcf avcf(cfile, strictIUPAC);
+        avcf.set_contigs(contigNames);
 
         try {
             avcf.readfile(genotypeField);
@@ -110,18 +108,19 @@ int main(int argc, const char * argv[]) {
             std::cerr << "ERROR READING VCF FILE " << cfile << " : " <<  e << std::endl;
             exit(1);
         }
-        vec_vcfs.push_back(avcf);
+        vec_vcfs.push_back( avcf);
         std::clog << "Finished parsing infile " << cfile << ", ambiguous/total lines: " << avcf.get_n_failed_lines() << "/" << avcf.get_total_variants_read() << std::endl;
     }
-    
+
     // READ REF
     fasta genomeReferenceFasta(Pversion);
     try{
-        genomeReferenceFasta.readFastaFile(reference, verbose);
+        genomeReferenceFasta.readFastaFile(reference, false, verbose);
         for ( unsigned int icontig = 0 ; icontig < genomeReferenceFasta.getNumberOfSequences() ; icontig++ ) {
+            if(contigNames.size() != 0 && contigNames.count(genomeReferenceFasta.getSequenceName(icontig)) == 0 ){continue;}
             fasta currentContig(Pversion);
             for (unsigned int iind = 0; iind < vec_vcfs.size(); iind++) {
-                currentContig.addSequence(vec_vcfs.at(iind).get_ind_name(), vec_vcfs.at(iind).make_fas(genomeReferenceFasta.getSequenceName(icontig), genomeReferenceFasta.getSequence(icontig)), (iind == 0) ? false : true, verbose );
+              currentContig.addSequence(vec_vcfs.at(iind).get_ind_name(), vec_vcfs.at(iind).make_fas(genomeReferenceFasta.getSequenceName(icontig), genomeReferenceFasta.getSequence(icontig)), (iind == 0) ? false : true, false );
             }
             currentContig.writeFastaFile( std::string( genomeReferenceFasta.getSequenceName(icontig) + ".fas" ), verbose );
         }

@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <regex>
 #include "common.h"
-
+#include <unordered_map>
 
 struct vcf_line {
     int start, end;
@@ -43,9 +43,11 @@ private:
     static std::string get_genotype_PL( const std::vector <std::string > & fields);
     static std::string get_genotype_GT( const std::vector <std::string > & fields);
     bool iupacStrict;
+    std::unordered_map < std::string, bool > contigs_to_consider;
+
 public:
     vcf ( std::string infile, bool iupacStrictness );
-    void readfile(std::string gfField);
+    void readfile(std::string gfField = "GT");
     std::string get_infile () { return infile; };
     std::string get_ind_name () { return ind_name; };
     static char toIUPAC (const std::string instr);
@@ -53,6 +55,7 @@ public:
     std::string make_fas ( std::string contig, std::string reference );
     int get_total_variants_read();
     void speak();
+    void set_contigs(std::unordered_map < std::string, bool > inmap ) {this->contigs_to_consider = inmap;};
 };
 
 
