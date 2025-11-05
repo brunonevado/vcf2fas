@@ -320,10 +320,14 @@ std::string vcf::make_fas ( std::string contig_name, std::string reference_seq )
                             ,  contigs.at(contig_name).lines.at(ivar).end - contigs.at(contig_name).lines.at(ivar).start + 1
                             , reference_seq.substr( contigs.at(contig_name).lines.at(ivar).start - 1, contigs.at(contig_name).lines.at(ivar).end - contigs.at(contig_name).lines.at(ivar).start + 1 ) );
             }
-            else{
+        }
+        // on 051125 split the loop above so it first adds all homozygous blocks, then all SNPs
+        for ( unsigned int ivar = 0; ivar < contigs.at(contig_name).lines.size()  ; ivar++ ) {
+            if( contigs.at(contig_name).lines.at(ivar).ref != true ){
                 res.at( contigs.at(contig_name).lines.at(ivar).start - 1  ) = contigs.at(contig_name).lines.at(ivar).alt;
             }
         }
+
         return res;
     }
     

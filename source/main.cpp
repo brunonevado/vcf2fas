@@ -20,14 +20,14 @@
 // 21052021b: added strictIUPAC option - to ignore (with warning) errors turning alleles to iupac codes
 // 150623: added ability to read 1-bp homozygous blocks with MinDP instead of END flag
 // 260624: added contig option
+// 051125: now fasta sequences are created by first screening all homozygous blocks, then adding SNPs. This should deal with issues when a position is reported both as a SNP and part of a homozygous block (the SNP is now always reported, irrespective of the order in the vcf)
 
-
-std::string Pversion = "v2.260624";
+std::string Pversion = "v2.051125";
 
 void help(){
     std::cout << "###################\n  vcf2fas "<< Pversion << "\n###################" << std::endl;;
     std::cout << "Create fasta files from vcf files." << std::endl;;
-    std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt" << std::endl;
+    std::cout << "Usage: vcf2fas -reference reference.fas -vcfs samples.txt [-gf GT] [-strictIUPAC 1] [-verbose 0] [-contigs contigs.txt]" << std::endl;
     std::cout << "-reference: reference genome/transcriptome used." << std::endl;
     std::cout << "-vcfs: text file with path to vcf files to use." << std::endl;
     std::cout << "-gf: which field to use for genotypes: GT or PL." << std::endl;
