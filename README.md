@@ -1,5 +1,5 @@
 ###################  
-  vcf2fas v2.260624  
+  vcf2fas v2.051125  
 ###################  
   
 Create fasta files from vcf files.  
